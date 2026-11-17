@@ -700,6 +700,32 @@ describe('createCustomXcm', () => {
     const isRefundInstruction = (instruction: unknown): instruction is { SetAppendix: unknown[] } =>
       typeof instruction === 'object' && instruction !== null && 'SetAppendix' in instruction
 
+    it('ignores ahAddress and refunds to sender when origin is not EVM', async () => {
+      vi.spyOn(mockApi, 'isChainEvm').mockReturnValue(false)
+
+      const result = await createCustomXcm(
+        {
+          ...hopContext,
+          options: {
+            ...hopContext.options,
+            sender: 'ss58-sender',
+            ahAddress: 'attacker-ss58'
+          }
+        },
+        2,
+        false,
+        mockContext.assetInfo.amount
+      )
+
+      expect(result.find(isRefundInstruction)).toBeDefined()
+      expect(createBeneficiaryLocation).toHaveBeenCalledWith(
+        expect.objectContaining({ address: 'ss58-sender' })
+      )
+      expect(createBeneficiaryLocation).not.toHaveBeenCalledWith(
+        expect.objectContaining({ address: 'attacker-ss58' })
+      )
+    })
+
     it('prefers ahAddress when provided', async () => {
       vi.spyOn(mockApi, 'isChainEvm').mockReturnValue(true)
 
