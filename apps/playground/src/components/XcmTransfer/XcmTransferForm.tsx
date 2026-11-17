@@ -391,8 +391,19 @@ const XcmTransferFormContent: FC<Props> = ({
           ? resolveCurrencyAsset(currencyTo, swapCurrencyToMap)
           : undefined;
 
+      const { from, to, ahAddress } = normalizedValues;
+
+      // Only forward ahAddress when the input is actually rendered (both chains EVM)
+      const transformedAhAddress =
+        isChainEvmImpl(from, { customChainAssets }) &&
+        isChainEvmImpl(to, { customChainAssets }) &&
+        from !== to
+          ? ahAddress
+          : '';
+
       const transformedValues: TFormValuesTransformed = {
         ...normalizedValues,
+        ahAddress: transformedAhAddress,
         currencies: transformedCurrencies,
         transformedFeeAsset,
         transformedCurrencyTo,
@@ -413,6 +424,7 @@ const XcmTransferFormContent: FC<Props> = ({
       activeCurrencyMap,
       feeCurrencyMap,
       swapCurrencyToMap,
+      customChainAssets,
       initialValues,
       onSubmit,
     ],
